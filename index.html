@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>🍬 Controle de Balas</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0e0b14;
+    --surface: #1a1525;
+    --surface2: #241d33;
+    --border: rgba(255,255,255,0.08);
+    --text: #f0eaf8;
+    --muted: #8b7fa8;
+    --accent1: #c084fc;
+    --accent2: #f472b6;
+    --accent3: #38bdf8;
+    --accent4: #4ade80;
+    --accent5: #fb923c;
+    --user1: #c084fc;
+    --user2: #f472b6;
+    --user3: #38bdf8;
+    --radius: 14px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 400;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(192,132,252,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 35% at 80% 80%, rgba(244,114,182,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse 40% 30% at 60% 40%, rgba(56,189,248,0.07) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 20px 60px; }
+
+  header {
+    padding: 40px 0 32px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+
+  header .icon { font-size: 36px; line-height: 1; }
+
+  header h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(24px, 4vw, 36px);
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  header p { color: var(--muted); font-size: 14px; margin-top: 2px; }
+
+  /* -------- SECTION TITLES -------- */
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* -------- CANDY CONFIG -------- */
+  .candy-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .candy-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color .2s;
+    position: relative;
+  }
+
+  .candy-card:hover { border-color: rgba(255,255,255,0.18); }
+
+  .candy-label {
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .candy-card input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 7px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .candy-card input:focus { border-color: var(--accent1); }
+  .candy-card input[type=number] { font-size: 13px; }
+
+  .candy-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    position: absolute; top: 14px; right: 14px;
+  }
+
+  .btn-add-candy {
+    background: var(--surface);
+    border: 1px dashed rgba(255,255,255,0.15);
+    border-radius: var(--radius);
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all .2s;
+    width: 100%;
+    margin-bottom: 28px;
+  }
+
+  .btn-add-candy:hover { border-color: var(--accent1); color: var(--accent1); }
+  .btn-add-candy:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* -------- REGISTER CONSUMPTION -------- */
+  .register-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 28px;
+  }
+
+  .register-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr auto;
+    gap: 12px;
+    align-items: end;
+  }
+
+  @media (max-width: 600px) {
+    .register-row { grid-template-columns: 1fr 1fr; }
+    .register-row .btn-primary { grid-column: 1 / -1; }
+  }
+
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+
+  .field select, .field input {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    padding: 9px 12px;
+    width: 100%;
+    outline: none;
+    transition: border-color .2s;
+    -webkit-appearance: none;
+  }
+
+  .field select { cursor: pointer; }
+  .field select:focus, .field input:focus { border-color: var(--accent1); }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent1), var(--accent2));
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: opacity .2s, transform .1s;
+    white-space: nowrap;
+  }
+
+  .btn-primary:hover { opacity: 0.88; }
+  .btn-primary:active { transform: scale(0.97); }
+
+  /* -------- USERS GRID -------- */
+  .users-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+
+  @media (max-width: 720px) {
+    .users-grid { grid-template-columns: 1fr; }
+  }
+
+  .user-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .user-header {
+    padding: 16px 18px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .user-avatar {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+  }
+
+  .user-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    flex: 1;
+  }
+
+  .user-name-input {
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    width: 100%;
+    outline: none;
+  }
+
+  .user-name-input:focus { border-bottom: 1px solid var(--accent1); }
+
+  .user-body { padding: 14px 18px; }
+
+  .consumption-list { list-style: none; }
+
+  .consumption-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .consumption-item:last-child { border-bottom: none; }
+
+  .ci-left { display: flex; align-items: center; gap: 8px; }
+
+  .ci-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+
+  .ci-name { color: var(--text); }
+  .ci-qty { color: var(--muted); font-size: 12px; }
+
+  .ci-right { text-align: right; }
+  .ci-total { font-weight: 500; font-size: 13px; }
+  .ci-delete {
+    background: none; border: none; color: var(--muted);
+    cursor: pointer; font-size: 14px; padding: 2px 6px;
+    border-radius: 4px; transition: color .15s;
+    margin-left: 6px;
+  }
+  .ci-delete:hover { color: #f87171; }
+
+  .user-footer {
+    padding: 12px 18px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .user-total-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+  .user-total-value { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; }
+
+  .btn-clear {
+    background: none;
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 6px;
+    color: rgba(248,113,113,0.7);
+    font-size: 11px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .btn-clear:hover { border-color: #f87171; color: #f87171; }
+
+  .empty-state {
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px 0;
+  }
+
+  /* toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 50px; padding: 10px 20px;
+    font-size: 13px; color: var(--text);
+    opacity: 0; pointer-events: none;
+    transition: opacity .3s;
+    z-index: 999;
+    white-space: nowrap;
+  }
+  .toast.show { opacity: 1; }
+
+  /* color dots for candies */
+  .color-c0 { background: var(--accent1); }
+  .color-c1 { background: var(--accent2); }
+  .color-c2 { background: var(--accent3); }
+  .color-c3 { background: var(--accent4); }
+  .color-c4 { background: var(--accent5); }
+
+  .color-text-c0 { color: var(--accent1); }
+  .color-text-c1 { color: var(--accent2); }
+  .color-text-c2 { color: var(--accent3); }
+  .color-text-c3 { color: var(--accent4); }
+  .color-text-c4 { color: var(--accent5); }
+
+  .user-0 { background: rgba(192,132,252,0.15); color: var(--accent1); }
+  .user-1 { background: rgba(244,114,182,0.15); color: var(--accent2); }
+  .user-2 { background: rgba(56,189,248,0.15); color: var(--accent3); }
+
+  .user-border-0 { border-top: 2px solid var(--accent1); }
+  .user-border-1 { border-top: 2px solid var(--accent2); }
+  .user-border-2 { border-top: 2px solid var(--accent3); }
+
+  .user-total-0 { color: var(--accent1); }
+  .user-total-1 { color: var(--accent2); }
+  .user-total-2 { color: var(--accent3); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="icon">🍬</div>
+    <div>
+      <h1>Controle de Balas</h1>
+      <p>Registre o consumo por usuário</p>
+    </div>
+  </header>
+
+  <!-- CANDY CONFIG -->
+  <div class="section-title">Tipos de bala</div>
+  <div class="candy-grid" id="candy-grid"></div>
+  <button class="btn-add-candy" id="btn-add-candy">+ Adicionar tipo de bala</button>
+
+  <!-- REGISTER -->
+  <div class="section-title">Registrar consumo</div>
+  <div class="register-box">
+    <div class="register-row">
+      <div class="field">
+        <label>Usuário</label>
+        <select id="sel-user"></select>
+      </div>
+      <div class="field">
+        <label>Tipo de bala</label>
+        <select id="sel-candy"></select>
+      </div>
+      <div class="field">
+        <label>Quantidade</label>
+        <input type="number" id="inp-qty" min="1" value="1" />
+      </div>
+      <button class="btn-primary" onclick="registrar()">Registrar</button>
+    </div>
+  </div>
+
+  <!-- USERS -->
+  <div class="section-title">Consumo por usuário</div>
+  <div class="users-grid" id="users-grid"></div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- STATE ----
+let state = {
+  candies: [
+    { id: 'c0', name: 'Bala de Morango', price: 0.50 },
+    { id: 'c1', name: 'Chiclete', price: 1.00 }
+  ],
+  users: [
+    { id: 'u0', name: 'Usuário 1' },
+    { id: 'u1', name: 'Usuário 2' },
+    { id: 'u2', name: 'Usuário 3' }
+  ],
+  log: [] // { userId, candyId, qty, total, ts }
+};
+
+const CANDY_COLORS = ['c0','c1','c2','c3','c4'];
+
+function save() {
+  localStorage.setItem('candy_ctrl_v1', JSON.stringify(state));
+}
+
+function load() {
+  try {
+    const d = localStorage.getItem('candy_ctrl_v1');
+    if (d) state = JSON.parse(d);
+  } catch(e) {}
+}
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ---- CANDY GRID ----
+function renderCandyGrid() {
+  const grid = document.getElementById('candy-grid');
+  grid.innerHTML = '';
+
+  state.candies.forEach((c, i) => {
+    const card = document.createElement('div');
+    card.className = 'candy-card';
+    card.innerHTML = `
+      <div class="candy-dot color-${CANDY_COLORS[i % 5]}"></div>
+      <div class="candy-label">Nome</div>
+      <input type="text" value="${esc(c.name)}" placeholder="Nome da bala"
+        onchange="updateCandy('${c.id}', 'name', this.value)" />
+      <div class="candy-label" style="margin-top:4px">Valor (R$)</div>
+      <input type="number" value="${c.price.toFixed(2)}" min="0" step="0.01" placeholder="0,00"
+        onchange="updateCandy('${c.id}', 'price', parseFloat(this.value) || 0)" />
+      ${state.candies.length > 1 ? `<button onclick="removeCandy('${c.id}')" style="background:none;border:none;color:rgba(248,113,113,0.5);font-size:11px;cursor:pointer;text-align:left;padding:2px 0;margin-top:2px;transition:color .15s;" onmouseover="this.style.color='#f87171'" onmouseout="this.style.color='rgba(248,113,113,0.5)'">remover</button>` : ''}
+    `;
+    grid.appendChild(card);
+  });
+
+  const btn = document.getElementById('btn-add-candy');
+  btn.disabled = state.candies.length >= 5;
+  btn.textContent = state.candies.length >= 5 ? 'Limite de 5 tipos atingido' : '+ Adicionar tipo de bala';
+}
+
+function updateCandy(id, field, val) {
+  const c = state.candies.find(x => x.id === id);
+  if (c) { c[field] = val; save(); renderSelects(); renderUsersGrid(); }
+}
+
+function removeCandy(id) {
+  if (state.candies.length <= 1) return;
+  state.candies = state.candies.filter(x => x.id !== id);
+  state.log = state.log.filter(x => x.candyId !== id);
+  save(); render();
+}
+
+document.getElementById('btn-add-candy').onclick = function() {
+  if (state.candies.length >= 5) return;
+  const newId = 'c' + Date.now();
+  state.candies.push({ id: newId, name: 'Nova Bala', price: 1.00 });
+  save(); render();
+};
+
+// ---- SELECTS ----
+function renderSelects() {
+  const su = document.getElementById('sel-user');
+  const sc = document.getElementById('sel-candy');
+  const prevU = su.value, prevC = sc.value;
+
+  su.innerHTML = state.users.map(u => `<option value="${u.id}">${esc(u.name)}</option>`).join('');
+  sc.innerHTML = state.candies.map(c => `<option value="${c.id}">${esc(c.name)} — R$ ${c.price.toFixed(2)}</option>`).join('');
+
+  if (prevU) su.value = prevU;
+  if (prevC) sc.value = prevC;
+}
+
+// ---- REGISTER ----
+function registrar() {
+  const userId = document.getElementById('sel-user').value;
+  const candyId = document.getElementById('sel-candy').value;
+  const qty = parseInt(document.getElementById('inp-qty').value) || 1;
+
+  const candy = state.candies.find(c => c.id === candyId);
+  const user = state.users.find(u => u.id === userId);
+  if (!candy || !user || qty < 1) { toast('Preencha todos os campos'); return; }
+
+  state.log.push({ userId, candyId, qty, total: qty * candy.price, ts: Date.now() });
+  save();
+  renderUsersGrid();
+  document.getElementById('inp-qty').value = 1;
+  toast(`✓ ${qty}x ${candy.name} para ${user.name}`);
+}
+
+// ---- USERS GRID ----
+function renderUsersGrid() {
+  const grid = document.getElementById('users-grid');
+  grid.innerHTML = '';
+
+  state.users.forEach((user, ui) => {
+    const userLog = state.log.filter(l => l.userId === user.id);
+
+    // aggregate by candy
+    const agg = {};
+    userLog.forEach(l => {
+      if (!agg[l.candyId]) agg[l.candyId] = { qty: 0, total: 0 };
+      agg[l.candyId].qty += l.qty;
+      agg[l.candyId].total += l.total;
+    });
+
+    const grandTotal = userLog.reduce((s, l) => s + l.total, 0);
+    const initials = user.name.split(' ').map(w => w[0]).slice(0,2).join('').toUpperCase();
+
+    const card = document.createElement('div');
+    card.className = `user-card user-border-${ui}`;
+
+    const rows = Object.entries(agg).map(([cid, data]) => {
+      const candy = state.candies.find(c => c.id === cid);
+      if (!candy) return '';
+      const ci = state.candies.indexOf(candy);
+      return `
+        <li class="consumption-item">
+          <div class="ci-left">
+            <span class="ci-dot color-${CANDY_COLORS[ci % 5]}"></span>
+            <div>
+              <div class="ci-name">${esc(candy.name)}</div>
+              <div class="ci-qty">${data.qty} unid. × R$ ${candy.price.toFixed(2)}</div>
+            </div>
+          </div>
+          <div class="ci-right">
+            <div class="ci-total color-text-${CANDY_COLORS[ci % 5]}">R$ ${data.total.toFixed(2)}</div>
+          </div>
+        </li>`;
+    }).join('');
+
+    card.innerHTML = `
+      <div class="user-header">
+        <div class="user-avatar user-${ui}">${initials}</div>
+        <input class="user-name-input" value="${esc(user.name)}"
+          onchange="renameUser('${user.id}', this.value)" />
+      </div>
+      <div class="user-body">
+        ${rows ? `<ul class="consumption-list">${rows}</ul>` : '<div class="empty-state">Nenhum consumo registrado</div>'}
+      </div>
+      <div class="user-footer">
+        <div>
+          <div class="user-total-label">Total</div>
+          <div class="user-total-value user-total-${ui}">R$ ${grandTotal.toFixed(2)}</div>
+        </div>
+        ${userLog.length > 0 ? `<button class="btn-clear" onclick="clearUser('${user.id}')">Limpar</button>` : ''}
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function renameUser(id, name) {
+  const u = state.users.find(x => x.id === id);
+  if (u) { u.name = name; save(); renderSelects(); }
+}
+
+function clearUser(id) {
+  if (!confirm('Limpar todo o consumo deste usuário?')) return;
+  state.log = state.log.filter(l => l.userId !== id);
+  save(); renderUsersGrid();
+  toast('Consumo limpo');
+}
+
+function esc(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function render() {
+  renderCandyGrid();
+  renderSelects();
+  renderUsersGrid();
+}
+
+load();
+render();
+</script>
+</body>
+</html>
